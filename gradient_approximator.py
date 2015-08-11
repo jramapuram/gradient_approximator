@@ -13,19 +13,6 @@ hidden_size = input_size / 2
 max_samples = input_size * 1000
 batch_size = 128
 
-def format_lstm_data(x):
-    # Need to create a 3d vector [samples, timesteps, input_dim]
-    if len(x.shape) < 3:
-        x = x[:, np.newaxis, :]
-        print 'formatted data to fit LSTM: ', x.shape
-    return x
-
-def unformat_lstm_data(x):
-    # Need to create a 2d vector [samples, input_dim]
-    if len(x.shape) > 2:
-        x = np.squeeze(x, (1,))
-        print 'unformatted data from LSTM: ', x.shape
-    return x
 
 def split(mat, test_ratio):
     train_ratio = 1.0 - test_ratio
@@ -37,8 +24,7 @@ def split(mat, test_ratio):
     elif mat.ndim == 1:
         return mat[0:train_index], mat[train_index + 1:len(mat) - 1]
     else:
-        print 'dimensionality is not 2 or 1!'
-        raise NotImplementedError
+        raise NotImplementedError("dimensionality is not 3,2 or 1!")
 
 # http://stackoverflow.com/questions/6822725/rolling-or-sliding-window-iterator-in-python
 def window(seq, n=2):
