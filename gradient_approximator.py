@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 from itertools import islice
 from keras.models import Sequential
-from keras.layers.core import Dropout
-from keras.layers.recurrent import LSTM
+from keras.layers.core import Dense
+from keras.regularizers import l2
 
 input_size = 256
 hidden_size = input_size / 2
@@ -59,8 +59,8 @@ def generate_data():
 
 # main
 func, grad = generate_data()
-func = format_lstm_data(np.array([f for f in window(func, input_size)]))
-grad = format_lstm_data(np.array([g for g in window(grad, input_size)]))
+func = np.array([f for f in window(func, input_size)])
+grad = np.array([g for g in window(grad, input_size)])
 func, func_test = split(func, 0.3)
 grad, grad_test = split(grad, 0.3)
 assert(func.shape == grad.shape)
@@ -70,16 +70,14 @@ print 'training shape: %s | target shape: %s' % (func.shape, grad.shape)
 print 'test shape: %s | tes target shape: %s' % (func_test.shape, grad_test.shape)
 
 model = Sequential()
-model.add(LSTM(input_size, hidden_size, return_sequences=True))
-model.add(Dropout(0.5))
-model.add(LSTM(hidden_size, input_size, return_sequences=True))
+model.add(Dense(input_size, input_size, W_regularizer=l2()))
 model.compile(loss='mse', optimizer='adam')
-model.fit(func, grad, batch_size=batch_size, nb_epoch=2)
+model.fit(func, grad, batch_size=batch_size, nb_epoch=3)
 score = model.evaluate(func_test, grad_test, batch_size=batch_size)
 print 'evaluation score: ', score
 
 fig = plt.figure()
 fig.suptitle('gradient_predictions[blue] vs. true_gradients[red]')
-plt.plot(model.predict(func_test[0:1, :, :], batch_size=1).flatten())
-plt.plot(grad_test[0:1, :, :].flatten(), color='red')
+plt.plot(model.predict(func_test[0:1, :], batch_size=1).flatten())
+plt.plot(grad_test[0:1, :].flatten(), color='red')
 plt.show()
